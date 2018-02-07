@@ -5,6 +5,30 @@ const (
 	Empty = rune(' ')
 )
 
+var (
+	TilePoints map[rune]int
+)
+
+func init() {
+	TilePoints = map[rune]int{}
+
+	p := map[string]int{
+		"EAIONRTLSU": 1,
+		"DG":         2,
+		"BCMP":       3,
+		"FHVWY":      4,
+		"K":          5,
+		"JX":         8,
+		"QZ":         10,
+	}
+
+	for s, n := range p {
+		for _, r := range s {
+			TilePoints[r] = n
+		}
+	}
+}
+
 //// Game state representation structures.
 type Row struct {
 	Col []rune
@@ -61,6 +85,29 @@ const (
 	DW
 	TW
 )
+
+func ScoreAcross(x, y int, word string) int {
+	ret := 0
+	wordMult := 1
+	for i, r := range word {
+		s := ScoreAt(x+i, y)
+		switch s {
+		case DW:
+			wordMult = 2
+		case TW:
+			wordMult = 3
+		}
+		switch s {
+		case TL:
+			ret = ret + TilePoints[r]*3
+		case DL:
+			ret = ret + TilePoints[r]*2
+		default:
+			ret = ret + TilePoints[r]
+		}
+	}
+	return ret * wordMult
+}
 
 func ScoreAt(x, y int) ScoreType {
 	// Symmetric adjustments if x or y > 7 to simplify checks below.

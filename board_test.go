@@ -31,12 +31,21 @@ func TestScoreAt(t *testing.T) {
 
 	Convey("symmetry", t, func() {
 		for x := 0; x < 15; x++ {
+			dlBitsX := uint(0)
 			for y := 0; y < 15; y++ {
+				if ScoreAt(x, y) == DL {
+					dlBitsX = dlBitsX | (1 << uint(14-y))
+				}
 				Convey(fmt.Sprintf("%d, %d", x, y), func() {
 					So(ScoreAt(x, y), ShouldEqual, ScoreAt(y, x))
 				})
 			}
 		}
 	})
+}
 
+func TestScoreAcross(t *testing.T) {
+	Convey("basic", t, func() {
+		So(ScoreAcross(0, 0, "OH"), ShouldEqual, 15)
+	})
 }
