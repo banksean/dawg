@@ -43,10 +43,13 @@ func (b *Board) CrossChecks(row int) []map[rune]bool {
 
 func NewBoard() *Board {
 	b := &Board{}
-	b.Row = [15]Row{}
-	for _, r := range b.Row {
-		r.Col = [15]rune{}
+	b.Row = make([]*Row, 15, 15)
+	for i, r := range b.Row {
+		r = &Row{}
+		b.Row[i] = r
+		r.Col = make([]rune, 15)
 	}
+	return b
 }
 
 type ScoreType int
@@ -60,9 +63,17 @@ const (
 )
 
 func ScoreAt(x, y int) ScoreType {
-	// Diagonals
+	// Symmetric adjustments if x or y > 7 to simplify checks below.
+	if x > 7 {
+		x = 14 - x
+	}
+
+	if y > 7 {
+		y = 14 - y
+	}
+
 	if x == y {
-		if x == 0 || x == 14 {
+		if x == 0 {
 			return TW
 		}
 		if x > 0 && x < 5 {
@@ -76,20 +87,19 @@ func ScoreAt(x, y int) ScoreType {
 		}
 	}
 
-	if x == 0 || x == 14 {
-		if y == 3 || y == 11 {
-			return DL
-		}
+	symCheck := func(a, b int) bool {
+		return x == a && y == b || x == b && y == a
 	}
-	if x == 1 {
-		if y == 5 || y == 9 {
-			return TL
-		}
+
+	switch {
+	case symCheck(0, 3) || symCheck(2, 6):
+		return DL
+	case symCheck(0, 7):
+		return TW
+	case symCheck(1, 5):
+		return TL
+	case symCheck(3, 7):
+		return DW
 	}
 	return None
 }
-
-/*
-
-
- */
