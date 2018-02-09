@@ -132,6 +132,9 @@ func ScoreAt(x, y int) ScoreType {
 		if x == 6 {
 			return DL
 		}
+		if x == 7 {
+			return DW
+		}
 	}
 
 	symCheck := func(a, b int) bool {
@@ -139,7 +142,7 @@ func ScoreAt(x, y int) ScoreType {
 	}
 
 	switch {
-	case symCheck(0, 3) || symCheck(2, 6):
+	case symCheck(0, 3) || symCheck(2, 6) || symCheck(3, 7):
 		return DL
 	case symCheck(0, 7):
 		return TW

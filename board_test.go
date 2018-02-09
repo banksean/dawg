@@ -23,7 +23,7 @@ func TestScoreAt(t *testing.T) {
 		So(ScoreAt(4, 4), ShouldEqual, DW)
 		So(ScoreAt(5, 5), ShouldEqual, TL)
 		So(ScoreAt(6, 6), ShouldEqual, DL)
-		So(ScoreAt(7, 7), ShouldEqual, None)
+		So(ScoreAt(7, 7), ShouldEqual, DW)
 
 		So(ScoreAt(0, 3), ShouldEqual, DL)
 		So(ScoreAt(3, 0), ShouldEqual, DL)
@@ -45,7 +45,10 @@ func TestScoreAt(t *testing.T) {
 }
 
 func TestScoreAcross(t *testing.T) {
-	Convey("basic", t, func() {
+	Convey("basoc", t, func() {
 		So(ScoreAcross(0, 0, "OH"), ShouldEqual, 15)
+		So(ScoreAt(3, 7), ShouldEqual, DL)
+		So(ScoreAcross(3, 7, "QUANT"), ShouldEqual, 48)
 	})
+
 }
