@@ -109,6 +109,111 @@ func ScoreAcross(x, y int, word string) int {
 	return ret * wordMult
 }
 
+// I was going to write a test to make sure the Bits slices were
+// the correct length but then remembered that the compiler can
+// check that for me for free!
+type scoreBits [8]uint
+
+var (
+	TWBits = scoreBits{
+		1 | (1 << 7),
+		0, 0, 0, 0, 0, 0,
+		1 << 7,
+	}
+	DWBits = scoreBits{
+		0,
+		1 << 6, 1 << 5, 1 << 4, 1 << 3,
+		0, 0,
+		1, // Center square is double word score.
+	}
+	TLBits = scoreBits{
+		0,
+		1 << 2,
+		0, 0, 0,
+		(1 << 6) | (1 << 2),
+		0, 0,
+	}
+	DLBits = scoreBits{
+		1 << 4,
+		0,
+		1 << 1,
+		1 | (1 << 7),
+		0, 0,
+		(1 << 1) | (1 << 5),
+		1 << 4,
+	}
+)
+
+func (s scoreBits) At(x, y int) bool {
+	row := s[y]
+	return row&(1<<uint(7-x)) > 0
+}
+
+func ScoreAtBits(x, y int) ScoreType {
+	// Symmetric adjustments if x or y > 7 to simplify checks below.
+	if x > 7 {
+		x = 14 - x
+	}
+
+	if y > 7 {
+		y = 14 - y
+	}
+
+	switch {
+	case TWBits.At(x, y):
+		return TW
+	case DWBits.At(x, y):
+		return DW
+	case TLBits.At(x, y):
+		return TL
+	case DLBits.At(x, y):
+		return DL
+	}
+
+	return None
+}
+
+// But you know what? The entire bit mask is 8x8, so we
+// could just stuff them all into uint64s.
+type scoreInt uint64
+
+var (
+	TWInt = scoreInt(0x8000000000000081)
+	DWInt = scoreInt(0x100000810204000)
+	TLInt = scoreInt(0x440000000400)
+	DLInt = scoreInt(0x1022000081020010)
+)
+
+func (s scoreInt) At(x, y int) bool {
+	return s&scoreInt(1<<(uint(y)*8+uint(7-x))) > 0
+}
+
+func ScoreAtInt(x, y int) ScoreType {
+	// Symmetric adjustments if x or y > 7 to simplify checks below.
+	if x > 7 {
+		x = 14 - x
+	}
+
+	if y > 7 {
+		y = 14 - y
+	}
+
+	switch {
+	case TWInt.At(x, y):
+		return TW
+	case DWInt.At(x, y):
+		return DW
+	case TLInt.At(x, y):
+		return TL
+	case DLInt.At(x, y):
+		return DL
+	}
+
+	return None
+}
+
+// ScoreAt uses a series of conditional checks to determine what a
+// particular square's score multiplier is.
 func ScoreAt(x, y int) ScoreType {
 	// Symmetric adjustments if x or y > 7 to simplify checks below.
 	if x > 7 {
