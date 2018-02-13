@@ -15,28 +15,6 @@ func TestNewBoard(t *testing.T) {
 }
 
 func TestScoreAt(t *testing.T) {
-
-	Convey("debug", t, func() {
-		printBits := func(b scoreBits) {
-			p := b[0]
-			for i, r := range b {
-				p = p | (r << uint(i*8))
-			}
-
-			Printf("%x\n", p)
-		}
-
-		Print("TWBits:\n")
-		printBits(TWBits)
-		Print("\nDWBits:\n")
-		printBits(DWBits)
-
-		Print("\nTLBits:\n")
-		printBits(TLBits)
-		Print("\nDLBits:\n")
-		printBits(DLBits)
-	})
-
 	Convey("spot checks", t, func() {
 		So(ScoreAt(0, 0), ShouldEqual, TW)
 		So(ScoreAt(1, 1), ShouldEqual, DW)
