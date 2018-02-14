@@ -137,7 +137,7 @@ func ScoreAtLiteral(x, y int) ScoreType {
 	if y > 7 {
 		y = 14 - y
 	}
-	return LiteralBoard.At(x, y)
+	return LiteralBoard[y][x]
 }
 
 // I was going to write a test to make sure the Bits slices were
@@ -190,6 +190,8 @@ func ScoreAtBits(x, y int) ScoreType {
 		y = 14 - y
 	}
 
+	// Order these so the more common cases are hit earlier and
+	// we don't have to do as many .At calls.
 	switch {
 	case TWBits.At(x, y):
 		return TW
@@ -209,11 +211,19 @@ func ScoreAtBits(x, y int) ScoreType {
 type scoreInt uint64
 
 var (
-	TWInt = scoreInt(0x8000000000000081)
-	DWInt = scoreInt(0x100000810204000)
-	TLInt = scoreInt(0x440000000400)
-	DLInt = scoreInt(0x1022000081020010)
+	TWInt   = scoreInt(0x8000000000000081)
+	DWInt   = scoreInt(0x100000810204000)
+	TLInt   = scoreInt(0x440000000400)
+	DLInt   = scoreInt(0x1022000081020010)
+	NoneInt = scoreInt(0xFFFFFFFFFFFFFFFF)
 )
+
+func init() {
+	NoneInt = NoneInt & (^TWInt)
+	NoneInt = NoneInt & (^DWInt)
+	NoneInt = NoneInt & (^TLInt)
+	NoneInt = NoneInt & (^DLInt)
+}
 
 func (s scoreInt) At(x, y int) bool {
 	return s&scoreInt(1<<(uint(y)*8+uint(7-x))) > 0
@@ -229,15 +239,19 @@ func ScoreAtInt(x, y int) ScoreType {
 		y = 14 - y
 	}
 
+	mask := scoreInt(1 << (uint(y)*8 + uint(7-x)))
+
 	switch {
-	case TWInt.At(x, y):
-		return TW
-	case DWInt.At(x, y):
-		return DW
-	case TLInt.At(x, y):
-		return TL
-	case DLInt.At(x, y):
+	case NoneInt&mask > 0:
+		return None
+	case DLInt&mask > 0:
 		return DL
+	case DWInt&mask > 0:
+		return DW
+	case TLInt&mask > 0:
+		return TL
+	case TWInt&mask > 0:
+		return TW
 	}
 
 	return None
