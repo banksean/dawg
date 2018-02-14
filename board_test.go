@@ -69,7 +69,7 @@ func BenchmarkScoreAtLiteral(b *testing.B) {
 	}
 }
 
-func BenchmarkScoreAtContitional(b *testing.B) {
+func BenchmarkScoreAtConditional(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		for x := 0; x < 15; x++ {
 			for y := 0; y < 15; y++ {
