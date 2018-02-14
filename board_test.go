@@ -44,6 +44,7 @@ func TestScoreAt(t *testing.T) {
 				Convey(fmt.Sprintf("%d, %d", x, y), func() {
 					So(ScoreAtBits(x, y), ShouldEqual, ScoreAtConditional(x, y))
 					So(ScoreAtInt(x, y), ShouldEqual, ScoreAtConditional(x, y))
+					So(ScoreAtLiteral(x, y), ShouldEqual, ScoreAtConditional(x, y))
 				})
 			}
 		}
@@ -56,6 +57,16 @@ func TestScoreAcross(t *testing.T) {
 		So(ScoreAtConditional(3, 7), ShouldEqual, DL)
 		So(ScoreAcross(3, 7, "QUANT"), ShouldEqual, 48)
 	})
+}
+
+func BenchmarkScoreAtLiteral(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for x := 0; x < 15; x++ {
+			for y := 0; y < 15; y++ {
+				_ = ScoreAtLiteral(x, y)
+			}
+		}
+	}
 }
 
 func BenchmarkScoreAtContitional(b *testing.B) {

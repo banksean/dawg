@@ -109,6 +109,37 @@ func ScoreAcross(x, y int, word string) int {
 	return ret * wordMult
 }
 
+type literalBoard [8][8]ScoreType
+
+var (
+	LiteralBoard = literalBoard{
+		{TW, None, None, DL, None, None, None, TW},
+		{None, DW, None, None, None, TL, None, None},
+		{None, None, DW, None, None, None, DL, None},
+		{DL, None, None, DW, None, None, None, DL},
+		{None, None, None, None, DW, None, None, None},
+		{None, TL, None, None, None, TL, None, None},
+		{None, None, DL, None, None, None, DL, None},
+		{TW, None, None, DL, None, None, None, DW},
+	}
+)
+
+func (b literalBoard) At(x, y int) ScoreType {
+	return b[y][x]
+}
+
+func ScoreAtLiteral(x, y int) ScoreType {
+	// Symmetric adjustments if x or y > 7 to simplify checks below.
+	if x > 7 {
+		x = 14 - x
+	}
+
+	if y > 7 {
+		y = 14 - y
+	}
+	return LiteralBoard.At(x, y)
+}
+
 // I was going to write a test to make sure the Bits slices were
 // the correct length but then remembered that the compiler can
 // check that for me for free!
