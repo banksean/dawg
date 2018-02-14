@@ -90,7 +90,7 @@ func ScoreAcross(x, y int, word string) int {
 	ret := 0
 	wordMult := 1
 	for i, r := range word {
-		s := ScoreAt(x+i, y)
+		s := ScoreAtConditional(x+i, y)
 		switch s {
 		case DW:
 			wordMult = 2
@@ -212,9 +212,9 @@ func ScoreAtInt(x, y int) ScoreType {
 	return None
 }
 
-// ScoreAt uses a series of conditional checks to determine what a
+// ScoreAtConditional uses a series of conditional checks to determine what a
 // particular square's score multiplier is.
-func ScoreAt(x, y int) ScoreType {
+func ScoreAtConditional(x, y int) ScoreType {
 	// Symmetric adjustments if x or y > 7 to simplify checks below.
 	if x > 7 {
 		x = 14 - x
