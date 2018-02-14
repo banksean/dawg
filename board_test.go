@@ -56,5 +56,34 @@ func TestScoreAcross(t *testing.T) {
 		So(ScoreAt(3, 7), ShouldEqual, DL)
 		So(ScoreAcross(3, 7, "QUANT"), ShouldEqual, 48)
 	})
+}
 
+func BenchmarkScoreAt(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for x := 0; x < 15; x++ {
+			for y := 0; y < 15; y++ {
+				_ = ScoreAt(x, y)
+			}
+		}
+	}
+}
+
+func BenchmarkScoreAtBits(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for x := 0; x < 15; x++ {
+			for y := 0; y < 15; y++ {
+				_ = ScoreAtBits(x, y)
+			}
+		}
+	}
+}
+
+func BenchmarkScoreAtInt(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		for x := 0; x < 15; x++ {
+			for y := 0; y < 15; y++ {
+				_ = ScoreAtInt(x, y)
+			}
+		}
+	}
 }
