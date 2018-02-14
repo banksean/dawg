@@ -215,15 +215,8 @@ var (
 	DWInt   = scoreInt(0x100000810204000)
 	TLInt   = scoreInt(0x440000000400)
 	DLInt   = scoreInt(0x1022000081020010)
-	NoneInt = scoreInt(0xFFFFFFFFFFFFFFFF)
+	NoneInt = scoreInt(0x6eddbbf76eddbb6e)
 )
-
-func init() {
-	NoneInt = NoneInt & (^TWInt)
-	NoneInt = NoneInt & (^DWInt)
-	NoneInt = NoneInt & (^TLInt)
-	NoneInt = NoneInt & (^DLInt)
-}
 
 func (s scoreInt) At(x, y int) bool {
 	return s&scoreInt(1<<(uint(y)*8+uint(7-x))) > 0

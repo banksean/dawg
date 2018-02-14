@@ -48,6 +48,7 @@ func TestScoreAt(t *testing.T) {
 				})
 			}
 		}
+		Printf("NoneInt: %x\n", NoneInt)
 	})
 }
 
