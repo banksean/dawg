@@ -7,13 +7,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestNewBoard(t *testing.T) {
-	Convey("New board is correct size", t, func() {
-		b := NewBoard()
-		So(len(b.Row), ShouldEqual, 15)
-	})
-}
-
 func TestScoreAt(t *testing.T) {
 	Convey("spot checks", t, func() {
 		So(ScrabbleScores.ScoreAt(0, 0), ShouldEqual, TW)
@@ -40,10 +33,43 @@ func TestScoreAt(t *testing.T) {
 }
 
 func TestScoreAcross(t *testing.T) {
+	Convey("spot checks", t, func() {
+		var b Board
+		So(b.ScoreAcross(0, 0, "OH"), ShouldEqual, 15)
+		So(b.ScoreAcross(3, 7, "QUANT"), ShouldEqual, 48)
+	})
+}
+
+func TestPlaceAcross(t *testing.T) {
 	Convey("basic", t, func() {
-		So(ScoreAcross(0, 0, "OH"), ShouldEqual, 15)
-		So(ScrabbleScores.ScoreAt(3, 7), ShouldEqual, DL)
-		So(ScoreAcross(3, 7, "QUANT"), ShouldEqual, 48)
+		var b Board
+		b.PlaceAcross(0, 0, "WHEAT")
+		So(b[0][0], ShouldEqual, 'W')
+		So(b[0][1], ShouldEqual, 'H')
+		So(b[0][2], ShouldEqual, 'E')
+		So(b[0][3], ShouldEqual, 'A')
+		So(b[0][4], ShouldEqual, 'T')
+
+		b.PlaceAcross(7, 4, "WHEAT")
+		So(b[4][7], ShouldEqual, 'W')
+		So(b[4][8], ShouldEqual, 'H')
+		So(b[4][9], ShouldEqual, 'E')
+		So(b[4][10], ShouldEqual, 'A')
+		So(b[4][11], ShouldEqual, 'T')
+	})
+}
+
+func TestAnchors(t *testing.T) {
+	Convey("basic", t, func() {
+		var r Row
+		So(len(r.Anchors()), ShouldEqual, 0)
+		r[4] = 'Q'
+		So(r.Anchors(), ShouldResemble, []int{3})
+		r[5] = 'I'
+		So(r.Anchors(), ShouldResemble, []int{3})
+		r[7] = 'K'
+		So(r.Anchors(), ShouldResemble, []int{3, 6})
+
 	})
 }
 

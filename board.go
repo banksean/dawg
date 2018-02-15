@@ -1,8 +1,13 @@
 package main
 
+import (
+	"fmt"
+)
+
 const (
 	// Empty represents an unplayed square.
-	Empty = rune(' ')
+	// rune(0) is the zero rune value.
+	Empty = rune(0)
 )
 
 var (
@@ -13,6 +18,7 @@ func init() {
 	TilePoints = map[rune]int{}
 
 	p := map[string]int{
+		// Blank tiles are worth zero points, so yay zero values :)
 		"EAIONRTLSU": 1,
 		"DG":         2,
 		"BCMP":       3,
@@ -29,66 +35,21 @@ func init() {
 	}
 }
 
-//// Game state representation structures.
-type Row struct {
-	Col []rune
-}
+// Board is row-major, i.e. [y][x].
+type Board [15][15]rune
 
-// Anchors returns the positions of possible anchor squares in the row.
-// An anchor is a square that is vacant and has a played character to
-// the right of it.
-func (r *Row) Anchors() []int {
-	ret := []int{}
-	for i, v := range r.Col {
-		if v != Empty {
-			continue
-		}
-
-		if i == len(r.Col)-1 {
-			ret = append(ret, i)
-			continue
-		}
-
-		if i < len(r.Col)-1 && r.Col[i+1] != Empty {
-			ret = append(ret, i)
-		}
+func (b *Board) PlaceAcross(x, y int, word string) {
+	for c, r := range word {
+		// TODO: double check here (or elsewhere)
+		// that if y, c+x is already played that it equals r.
+		b[y][c+x] = r
 	}
-	return ret
 }
 
-type Board struct {
-	Row []*Row
-}
-
-func (b *Board) CrossChecks(row int) []map[rune]bool {
-	ret := []map[rune]bool{}
-	return ret
-}
-
-func NewBoard() *Board {
-	b := &Board{}
-	b.Row = make([]*Row, 15, 15)
-	for i, r := range b.Row {
-		r = &Row{}
-		b.Row[i] = r
-		r.Col = make([]rune, 15)
-	}
-	return b
-}
-
-type ScoreType int
-
-const (
-	None ScoreType = iota
-	DL
-	TL
-	DW
-	TW
-)
-
-func ScoreAcross(x, y int, word string) int {
+func (b *Board) ScoreAcross(x, y int, word string) int {
 	ret := 0
 	wordMult := 1
+	// TODO: Discount positions that have already been played!
 	for i, r := range word {
 		s := ScrabbleScores.ScoreAt(x+i, y)
 		switch s {
@@ -109,6 +70,37 @@ func ScoreAcross(x, y int, word string) int {
 	return ret * wordMult
 }
 
+type Row [15]rune
+
+// Anchors returns the positions of possible anchor squares in the row.
+// An anchor is a square that is vacant and has a played character to
+// the right of it.
+func (r Row) Anchors() []int {
+	ret := []int{}
+	for i, v := range r {
+		if v != Empty {
+			continue
+		}
+
+		if i < len(r)-1 && r[i+1] != Empty {
+			fmt.Printf("anchor square at %d. Square to the right is %q\n", i, r[i+1])
+			ret = append(ret, i)
+		}
+	}
+	return ret
+}
+
+type ScoreType int
+
+const (
+	None ScoreType = iota
+	DL
+	TL
+	DW
+	TW
+)
+
+// Row major, so it's [y][x].
 type boardScores [8][8]ScoreType
 
 var (
