@@ -92,8 +92,12 @@ func TestCrossChecks(t *testing.T) {
 		// Above and below
 		So(b.CrossChecks(7, 6, j), ShouldResemble, []rune{})
 		So(b.CrossChecks(7, 8, j), ShouldResemble, []rune{})
-	})
 
+		// Now add a word to the dict.
+		j["AX"] = true
+		So(b.CrossChecks(7, 6, j), ShouldResemble, []rune{})
+		So(b.CrossChecks(7, 8, j), ShouldResemble, []rune{'X'})
+	})
 }
 
 func TestAnchors(t *testing.T) {
