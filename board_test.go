@@ -59,6 +59,43 @@ func TestPlaceAcross(t *testing.T) {
 	})
 }
 
+type testJudge map[string]bool
+
+func (j testJudge) Legal(s string) bool {
+	return j[s]
+}
+
+func TestCrossChecks(t *testing.T) {
+	Convey("empty", t, func() {
+		var b Board
+		j := testJudge{}
+		// If there are no letters on the board, there are no conflicts.
+		allLetters := []rune(ALPHABET)
+
+		for y, _ := range b {
+			for x, _ := range b[y] {
+				So(b.CrossChecks(x, y, j), ShouldResemble, allLetters)
+			}
+		}
+	})
+
+	Convey("some words played", t, func() {
+		var b Board
+		b[7][7] = 'A'
+		j := testJudge{}
+		allLetters := []rune(ALPHABET)
+
+		// To the left and right
+		So(b.CrossChecks(6, 7, j), ShouldResemble, allLetters)
+		So(b.CrossChecks(8, 7, j), ShouldResemble, allLetters)
+
+		// Above and below
+		So(b.CrossChecks(7, 6, j), ShouldResemble, []rune{})
+		So(b.CrossChecks(7, 8, j), ShouldResemble, []rune{})
+	})
+
+}
+
 func TestAnchors(t *testing.T) {
 	Convey("basic", t, func() {
 		var r Row

@@ -1,13 +1,11 @@
 package main
 
-import (
-	"fmt"
-)
-
 const (
 	// Empty represents an unplayed square.
 	// rune(0) is the zero rune value.
 	Empty = rune(0)
+
+	ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 var (
@@ -70,6 +68,55 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 	return ret * wordMult
 }
 
+type Judge interface {
+	Legal(string) bool
+}
+
+// CrossChecks returns the list of valid runes that may be placed at
+// x, y that will not create a word that j rejects.
+func (b *Board) CrossChecks(x, y int, j Judge) []rune {
+	ret := []rune{}
+	startY := y
+	endY := y
+
+	// Stop when startY hits an empty space or 0
+	for ; startY > 0; startY-- {
+		if b[startY-1][x] == Empty {
+			break
+		}
+	}
+
+	for ; endY < len(b)-1; endY++ {
+		if b[endY+1][x] == Empty {
+			break
+		}
+	}
+
+	// If start == end, then this square has empty above and below.
+	// So it can be any rune.
+	if startY == endY {
+		return []rune(ALPHABET)
+	}
+
+	// Fill out the test word with the extent around x, y's column.
+	// TODO: pre-size this.
+	w := []rune{}
+
+	for i := startY; i <= endY; i++ {
+		w = append(w, b[i][x])
+	}
+
+	// Now for the Judgement!
+	for _, r := range ALPHABET {
+		w[y-startY] = r
+		if j.Legal(string(w)) {
+			ret = append(ret, r)
+		}
+	}
+
+	return ret
+}
+
 type Row [15]rune
 
 // Anchors returns the positions of possible anchor squares in the row.
@@ -83,7 +130,6 @@ func (r Row) Anchors() []int {
 		}
 
 		if i < len(r)-1 && r[i+1] != Empty {
-			fmt.Printf("anchor square at %d. Square to the right is %q\n", i, r[i+1])
 			ret = append(ret, i)
 		}
 	}
