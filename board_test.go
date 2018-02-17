@@ -114,6 +114,24 @@ func TestAnchors(t *testing.T) {
 	})
 }
 
+func TestTranspose(t *testing.T) {
+	Convey("basic", t, func() {
+		b := &Board{}
+		a := b.Transpose()
+		So(b, ShouldResemble, a)
+
+		b[0][0] = 'c'
+		a = b.Transpose()
+		So(b[0][0], ShouldEqual, 'c')
+		So(a[0][0], ShouldEqual, 'c')
+
+		b[0][1] = 'd'
+		a = b.Transpose()
+		So(b[0][1], ShouldEqual, 'd')
+		So(a[1][0], ShouldEqual, 'd')
+	})
+}
+
 func BenchmarkScrabbleScoresScoreAt(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		for x := 0; x < 15; x++ {

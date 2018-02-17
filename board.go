@@ -36,6 +36,18 @@ func init() {
 // Board is row-major, i.e. [y][x].
 type Board [15][15]rune
 
+// Transpose returns a new Board populated by the
+// transposition of b.
+func (b *Board) Transpose() *Board {
+	a := &Board{}
+	for x := range b {
+		for y := range b[x] {
+			a[x][y] = b[y][x]
+		}
+	}
+	return a
+}
+
 func (b *Board) PlaceAcross(x, y int, word string) {
 	for c, r := range word {
 		// TODO: double check here (or elsewhere)
