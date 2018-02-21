@@ -148,6 +148,78 @@ func (r Row) Anchors() []int {
 	return ret
 }
 
+type Rack map[rune]int
+
+func (r Rack) Count() int {
+	n := 0
+	for _, c := range r {
+		n += c
+	}
+	return n
+}
+
+func (r Rack) Add(t rune) {
+	if r.Count() > 6 {
+		panic("can't add more tiles to rack: " + string(t))
+	}
+
+	r[t]++
+}
+
+func (r Rack) Remove(t rune) {
+	if r[t] <= 0 {
+		panic("can't remove tile from rack: " + string(t))
+	}
+
+	r[t]--
+}
+
+var (
+	TileCounts = map[string]int{
+		"KJQXZ":       1,
+		"BCMPFHVWY":   2,
+		"G":           3,
+		"DLSU":        4,
+		"NRT":         6,
+		"O":           8,
+		"AI":          9,
+		"E":           12,
+		string(Empty): 2,
+	}
+)
+
+type Sack map[rune]int
+
+func NewSack() Sack {
+	ret := Sack{}
+	for s, c := range TileCounts {
+		for _, r := range s {
+			ret[r] = c
+		}
+	}
+	return ret
+}
+
+func (s Sack) Draw() rune {
+	// I *was* bummed that I was going to have to add
+	// this package's first import: math/rand. Then
+	// I rememberd that the built-in range iterator for
+	// maps randomizes the order every time. This isn't
+	// as testable as it could be but at least I didn't
+	// have to start importing from other packages!
+	for r := range s {
+		s[r]--
+		if s[r] == 0 {
+			delete(s, r)
+		}
+		// Always take the first one returned by
+		// the range iterator.
+		return r
+	}
+
+	panic("tried to draw from an empty Sack")
+}
+
 type ScoreType int
 
 const (

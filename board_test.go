@@ -132,6 +132,22 @@ func TestTranspose(t *testing.T) {
 	})
 }
 
+func TestSack(t *testing.T) {
+	Convey("basic", t, func() {
+		s := NewSack()
+		So(len(s), ShouldEqual, 27)
+
+		Convey("draw", func() {
+			sum := 0
+			for i := 0; i < 100; i++ {
+				t := s.Draw()
+				sum += TilePoints[t]
+			}
+			So(sum, ShouldEqual, 187)
+		})
+	})
+}
+
 func BenchmarkScrabbleScoresScoreAt(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		for x := 0; x < 15; x++ {
