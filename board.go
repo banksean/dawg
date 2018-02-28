@@ -34,7 +34,7 @@ func init() {
 }
 
 // Board is row-major, i.e. [y][x].
-type Board [15][15]rune
+type Board [15]Row
 
 // Transpose returns a new Board populated by the
 // transposition of b.
@@ -146,6 +146,50 @@ func (r Row) Anchors() []int {
 		}
 	}
 	return ret
+}
+
+type Play struct {
+	x, y int
+	word string
+}
+
+func (b Board) GenerateMoves(y int, r Rack, d DAWG) []Play {
+	ret := []Play{}
+	row := b[y]
+	anchors := row.Anchors()
+	for _, x := range anchors {
+		leftParts := row.LeftParts(x, r, d)
+		for _, lp := range leftParts {
+			rightParts := row.RightParts(x, lp, d)
+			for _, rp := range rightParts {
+				ret = append(ret, Play{
+					x:    x,
+					y:    y,
+					word: lp + rp,
+				})
+			}
+		}
+	}
+	return ret
+}
+
+func (r Row) LeftParts(x int, ra Rack, d DAWG) []string {
+	// Check if the squares to the left of x are occupied. If they
+	// are, then they form the one and only left part for the
+	// anchor at x.
+	if x > 0 && r[x-1] != Empty {
+		ret := ""
+		for i := x - 1; r[i] != Empty; i-- {
+			ret = r[i] + ret
+		}
+		return []string{ret}
+	}
+
+	return nil
+}
+
+func (r Row) RightParts(x int, lp string, d DAWG) []string {
+	return nil
 }
 
 type Rack map[rune]int
