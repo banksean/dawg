@@ -185,7 +185,8 @@ func (r Row) LeftParts(x int, ra Rack, d DAWG) []string {
 		return []string{ret}
 	}
 
-	return nil
+	ret := []string{}
+	return ret
 }
 
 func (r Row) RightParts(x int, lp string, d DAWG) []string {
