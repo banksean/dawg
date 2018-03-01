@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 const (
 	// Empty represents an unplayed square.
 	// rune(0) is the zero rune value.
@@ -10,6 +14,7 @@ const (
 
 var (
 	TilePoints map[rune]int
+	rootDAWG   *DAWG
 )
 
 func init() {
@@ -81,13 +86,13 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 }
 
 type Judge interface {
-	Legal(string) bool
+	Contains(string) bool
 }
 
 // CrossChecks returns the list of valid runes that may be placed at
 // x, y that will not create a word that j rejects.
-func (b *Board) CrossChecks(x, y int, j Judge) []rune {
-	ret := []rune{}
+func (b *Board) CrossChecks(x, y int, j Judge) map[rune]bool {
+	ret := map[rune]bool{}
 	startY := y
 	endY := y
 
@@ -107,7 +112,10 @@ func (b *Board) CrossChecks(x, y int, j Judge) []rune {
 	// If start == end, then this square has empty above and below.
 	// So it can be any rune.
 	if startY == endY {
-		return []rune(ALPHABET)
+		for _, r := range ALPHABET {
+			ret[r] = true
+		}
+		return ret
 	}
 
 	// Fill out the test word with the extent around x, y's column.
@@ -121,8 +129,8 @@ func (b *Board) CrossChecks(x, y int, j Judge) []rune {
 	// Now for the Judgement!
 	for _, r := range ALPHABET {
 		w[y-startY] = r
-		if j.Legal(string(w)) {
-			ret = append(ret, r)
+		if j.Contains(string(w)) {
+			ret[r] = true
 		}
 	}
 
@@ -153,6 +161,47 @@ type Play struct {
 	word string
 }
 
+// More or less literal implementation of pseudocode from the 1988 ACM paper:
+func (b Board) LeftPart(x, y int, partialWord string, node *DAWG, limit int, ra Rack) {
+	b.ExtendRight(x, y, partialWord, node, ra)
+	if limit > 0 {
+		for r, nextNode := range node.Edge {
+			if ra[r] > 0 {
+				ra.Remove(r)
+				b.LeftPart(x, y, partialWord+string(r), nextNode, limit-1, ra)
+				ra.Add(r)
+			}
+		}
+	}
+}
+
+func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack) {
+	if b[y][x] == Empty {
+		if node.Terminal {
+			// Send this on a channel?
+			LegalWord(partialWord)
+		}
+		crossChecks := b.CrossChecks(x, y, rootDAWG)
+		for r, nextNode := range node.Edge {
+			if ra[r] > 0 && crossChecks[r] {
+				ra.Remove(r)
+				b.ExtendRight(x+1, y, partialWord+string(r), nextNode, ra)
+				ra.Add(r)
+			}
+		}
+	} else {
+		l := b[y][x]
+		if node.Edge[l] != nil {
+			nextNode := node.Edge[l]
+			b.ExtendRight(x+1, y, partialWord+string(l), nextNode, ra)
+		}
+	}
+}
+
+func LegalWord(s string) {
+	fmt.Printf("legal word: %q\n", s)
+}
+
 func (b Board) GenerateMoves(y int, r Rack, d DAWG) []Play {
 	ret := []Play{}
 	row := b[y]
@@ -174,18 +223,38 @@ func (b Board) GenerateMoves(y int, r Rack, d DAWG) []Play {
 }
 
 func (r Row) LeftParts(x int, ra Rack, d DAWG) []string {
+	if x == 0 {
+		return nil
+	}
+
 	// Check if the squares to the left of x are occupied. If they
 	// are, then they form the one and only left part for the
 	// anchor at x.
-	if x > 0 && r[x-1] != Empty {
+	if r[x-1] != Empty {
 		ret := ""
 		for i := x - 1; r[i] != Empty; i-- {
-			ret = r[i] + ret
+			ret = string(r[i]) + ret
 		}
 		return []string{ret}
 	}
 
 	ret := []string{}
+	// The squares to the left all have trivial cross checks
+	// so we can play any tile from ra in any of them.
+	// Just check for all of the prefixes that fit into
+	// the free tiles to the left of the anchor that can
+	// be constructed from tiles in ra.
+
+	maxLen := 0
+	for i := 0; r[i] == Empty; i-- {
+		maxLen++
+	}
+
+	for i := 1; i < maxLen; i++ {
+		// Enumerate all of the prefixes in ra of length i
+		// that can be constructed from tiles in ra.
+	}
+
 	return ret
 }
 

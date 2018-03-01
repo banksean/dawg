@@ -61,17 +61,21 @@ func TestPlaceAcross(t *testing.T) {
 
 type testJudge map[string]bool
 
-func (j testJudge) Legal(s string) bool {
+func (j testJudge) Contains(s string) bool {
 	return j[s]
 }
 
 func TestCrossChecks(t *testing.T) {
+
+	allLetters := map[rune]bool{}
+	for _, r := range ALPHABET {
+		allLetters[r] = true
+	}
+
 	Convey("empty", t, func() {
 		var b Board
 		j := testJudge{}
 		// If there are no letters on the board, there are no conflicts.
-		allLetters := []rune(ALPHABET)
-
 		for y, _ := range b {
 			for x, _ := range b[y] {
 				So(b.CrossChecks(x, y, j), ShouldResemble, allLetters)
@@ -83,20 +87,19 @@ func TestCrossChecks(t *testing.T) {
 		var b Board
 		b[7][7] = 'A'
 		j := testJudge{}
-		allLetters := []rune(ALPHABET)
 
 		// To the left and right
 		So(b.CrossChecks(6, 7, j), ShouldResemble, allLetters)
 		So(b.CrossChecks(8, 7, j), ShouldResemble, allLetters)
 
 		// Above and below
-		So(b.CrossChecks(7, 6, j), ShouldResemble, []rune{})
-		So(b.CrossChecks(7, 8, j), ShouldResemble, []rune{})
+		So(b.CrossChecks(7, 6, j), ShouldResemble, map[rune]bool{})
+		So(b.CrossChecks(7, 8, j), ShouldResemble, map[rune]bool{})
 
 		// Now add a word to the dict.
 		j["AX"] = true
-		So(b.CrossChecks(7, 6, j), ShouldResemble, []rune{})
-		So(b.CrossChecks(7, 8, j), ShouldResemble, []rune{'X'})
+		So(b.CrossChecks(7, 6, j), ShouldResemble, map[rune]bool{})
+		So(b.CrossChecks(7, 8, j), ShouldResemble, map[rune]bool{'X': true})
 	})
 }
 
