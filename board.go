@@ -202,57 +202,21 @@ func LegalWord(s string) {
 	fmt.Printf("legal word: %q\n", s)
 }
 
-func (b Board) GenerateMoves(y int, r Rack, d DAWG) []Play {
+func (b Board) GenerateRowMoves(y int, ra Rack, rootNode *DAWG) []Play {
 	ret := []Play{}
 	row := b[y]
 	anchors := row.Anchors()
 	for _, x := range anchors {
-		leftParts := row.LeftParts(x, r, d)
-		for _, lp := range leftParts {
-			rightParts := row.RightParts(x, lp, d)
-			for _, rp := range rightParts {
-				ret = append(ret, Play{
-					x:    x,
-					y:    y,
-					word: lp + rp,
-				})
-			}
-		}
+		limit := row.LeftMax(x)
+		b.LeftPart(x, y, "", rootNode, limit, ra)
 	}
 	return ret
 }
 
-func (r Row) LeftParts(x int, ra Rack, d DAWG) []string {
-	if x == 0 {
-		return nil
-	}
-
-	// Check if the squares to the left of x are occupied. If they
-	// are, then they form the one and only left part for the
-	// anchor at x.
-	if r[x-1] != Empty {
-		ret := ""
-		for i := x - 1; r[i] != Empty; i-- {
-			ret = string(r[i]) + ret
-		}
-		return []string{ret}
-	}
-
-	ret := []string{}
-	// The squares to the left all have trivial cross checks
-	// so we can play any tile from ra in any of them.
-	// Just check for all of the prefixes that fit into
-	// the free tiles to the left of the anchor that can
-	// be constructed from tiles in ra.
-
-	maxLen := 0
-	for i := 0; r[i] == Empty; i-- {
-		maxLen++
-	}
-
-	for i := 1; i < maxLen; i++ {
-		// Enumerate all of the prefixes in ra of length i
-		// that can be constructed from tiles in ra.
+func (r Row) LeftMax(x int) int {
+	ret := 0
+	for i := x; r[i] == Empty; i-- {
+		ret++
 	}
 
 	return ret
