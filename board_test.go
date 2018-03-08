@@ -150,8 +150,8 @@ func TestSack(t *testing.T) {
 	})
 }
 
-func TestLeftPart(t *testing.T) {
-	Convey("basic", t, func() {
+func TestPlays(t *testing.T) {
+	Convey("guy vs mac", t, func() {
 		b := &Board{}
 		guy, mac := 0, 0
 
@@ -162,6 +162,7 @@ func TestLeftPart(t *testing.T) {
 		b.PlaceAcross(7, 7, "ALACK")
 		Printf("guy: %d, mac: %d\n", guy, mac)
 		Printf("board:\n %s", b)
+		So(guy, ShouldEqual, 32)
 
 		mac += b.ScoreAcross(11, 8, "AJEE")
 		b.PlaceAcross(11, 8, "AJEE")
@@ -169,6 +170,7 @@ func TestLeftPart(t *testing.T) {
 		Printf("side points for KA: %d\n", sp)
 		Printf("guy: %d, mac: %d\n", guy, mac)
 		Printf("board:\n %s", b)
+		So(mac, ShouldEqual, 25)
 
 		guy += b.ScoreAcross(1, 8, "OUT*REW")
 		b.PlaceAcross(1, 8, "OUT*REW")
@@ -178,12 +180,27 @@ func TestLeftPart(t *testing.T) {
 		Printf("side points for AW: %d\n", sp)
 		Printf("guy: %d, mac: %d\n", guy, mac)
 		Printf("board:\n %s", b)
+		So(guy, ShouldEqual, 98)
 
 		mac += b.ScoreDown(14, 2, "HYALINE")
 		b = b.PlaceDown(14, 2, "HYALINE")
-
 		Printf("guy: %d, mac: %d\n", guy, mac)
 		Printf("board:\n %s", b)
+		So(mac, ShouldEqual, 76)
+
+		guy += b.ScoreDown(12, 8, "JUNIOR")
+		b = b.PlaceDown(12, 8, "JUNIOR")
+		Printf("guy: %d, mac: %d\n", guy, mac)
+		Printf("board:\n %s", b)
+		So(guy, ShouldEqual, 124)
+
+		mac += b.ScoreAcross(7, 14, "FENCES")
+		b.PlaceAcross(7, 14, "FENCES")
+		Printf("guy: %d, mac: %d\n", guy, mac)
+		Printf("board:\n %s", b)
+		sp = b.SidePoints(7, 8, 'W')
+		So(mac, ShouldEqual, 126)
+
 	})
 }
 

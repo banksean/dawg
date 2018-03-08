@@ -94,18 +94,27 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 		// no longer work and we won't check for side points of
 		// other words formed vertically since they've already
 		// been used in previous plays.
+		fmt.Printf("checking %d, %d: %s\n", x+i, y, string(b[y][x+i]))
 		if b[y][x+i] != Empty {
 			ret = ret + TilePoints[r]
+			fmt.Printf("%s was already played\n", string(r))
 			continue
 		}
 		newTilesPlayed += 1
+		s := ScrabbleScores.ScoreAt(x+i, y)
 		sp := b.SidePoints(x+i, y, r)
 		if sp > 0 {
-			sp += TilePoints[r]
+			switch s {
+			case TL:
+				sp += TilePoints[r] * 3
+			case DL:
+				sp += TilePoints[r] * 2
+			default:
+				sp += TilePoints[r]
+			}
 		}
 		sidePoints += sp
 
-		s := ScrabbleScores.ScoreAt(x+i, y)
 		switch s {
 		case DW:
 			wordMult += 2
@@ -121,19 +130,22 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 			ret = ret + TilePoints[r]
 		}
 	}
-	if newTilesPlayed == 7 {
-		ret += 50
-	}
 	if wordMult > 0 {
 		ret = ret * wordMult
 	}
+
+	// Bingo bonus:
+	if newTilesPlayed == 7 {
+		fmt.Printf("bingo\n")
+		ret += 50
+	}
+
 	return ret + sidePoints
 }
 
 func (b *Board) SidePoints(x, y int, r rune) int {
 	// Check above and below x, y to see if there are tangential words.
 	ret := 0
-	fmt.Printf("sp, starting with %s: %d\n", string(r), ret)
 	startY := y
 	endY := y
 
@@ -156,11 +168,12 @@ func (b *Board) SidePoints(x, y int, r rune) int {
 		ret += TilePoints[r]
 	}
 
+	fmt.Printf("sp, starting with %s: %d\n", string(r), ret)
 	return ret
 }
 
 func (b *Board) ScoreDown(x, y int, word string) int {
-	b.Transpose()
+	b = b.Transpose()
 	return b.ScoreAcross(y, x, word)
 }
 
