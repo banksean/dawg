@@ -41,6 +41,14 @@ func init() {
 // Board is row-major, i.e. [y][x].
 type Board [15]Row
 
+func (b *Board) String() string {
+	ret := ""
+	for _, row := range b {
+		ret = ret + row.String() + "\n"
+	}
+	return ret
+}
+
 // Transpose returns a new Board populated by the
 // transposition of b.
 func (b *Board) Transpose() *Board {
@@ -57,32 +65,103 @@ func (b *Board) PlaceAcross(x, y int, word string) {
 	for c, r := range word {
 		// TODO: double check here (or elsewhere)
 		// that if y, c+x is already played that it equals r.
+		if y >= len(b) {
+			panic(fmt.Sprintf("y %d is greater than board len %d", y, len(b)))
+		}
+		if c+x >= len(b[y]) {
+			panic(fmt.Sprintf("x %d + c %d  is greater than board len %d", x, c, len(b[y])))
+		}
+
 		b[y][c+x] = r
 	}
 }
 
+func (b *Board) PlaceDown(x, y int, word string) *Board {
+	b = b.Transpose()
+	b.PlaceAcross(y, x, word)
+	b = b.Transpose()
+	return b
+}
+
 func (b *Board) ScoreAcross(x, y int, word string) int {
 	ret := 0
-	wordMult := 1
-	// TODO: Discount positions that have already been played!
+	wordMult := 0
+	newTilesPlayed := 0
+	sidePoints := 0
 	for i, r := range word {
+		// Discount positions that have already been played.
+		// They count towards the base score, but multipliers
+		// no longer work and we won't check for side points of
+		// other words formed vertically since they've already
+		// been used in previous plays.
+		if b[y][x+i] != Empty {
+			ret = ret + TilePoints[r]
+			continue
+		}
+		newTilesPlayed += 1
+		sp := b.SidePoints(x+i, y, r)
+		if sp > 0 {
+			sp += TilePoints[r]
+		}
+		sidePoints += sp
+
 		s := ScrabbleScores.ScoreAt(x+i, y)
 		switch s {
 		case DW:
-			wordMult = 2
+			wordMult += 2
 		case TW:
-			wordMult = 3
+			wordMult += 3
 		}
 		switch s {
 		case TL:
-			ret = ret + TilePoints[r]*3
+			ret += TilePoints[r] * 3
 		case DL:
 			ret = ret + TilePoints[r]*2
 		default:
 			ret = ret + TilePoints[r]
 		}
 	}
-	return ret * wordMult
+	if newTilesPlayed == 7 {
+		ret += 50
+	}
+	if wordMult > 0 {
+		ret = ret * wordMult
+	}
+	return ret + sidePoints
+}
+
+func (b *Board) SidePoints(x, y int, r rune) int {
+	// Check above and below x, y to see if there are tangential words.
+	ret := 0
+	fmt.Printf("sp, starting with %s: %d\n", string(r), ret)
+	startY := y
+	endY := y
+
+	// stop when startY hits an empty space or 0
+	for ; startY > 0; startY-- {
+		r := b[startY-1][x]
+		if r == Empty {
+			break
+		}
+		fmt.Printf("adding %d for %s\n", TilePoints[r], string(r))
+		ret += TilePoints[r]
+	}
+
+	for ; endY < len(b)-1; endY++ {
+		r := b[endY+1][x]
+		if r == Empty {
+			break
+		}
+		fmt.Printf("adding %d for %s\n", TilePoints[r], string(r))
+		ret += TilePoints[r]
+	}
+
+	return ret
+}
+
+func (b *Board) ScoreDown(x, y int, word string) int {
+	b.Transpose()
+	return b.ScoreAcross(y, x, word)
 }
 
 type Judge interface {
@@ -96,7 +175,7 @@ func (b *Board) CrossChecks(x, y int, j Judge) map[rune]bool {
 	startY := y
 	endY := y
 
-	// Stop when startY hits an empty space or 0
+	// stop when startY hits an empty space or 0
 	for ; startY > 0; startY-- {
 		if b[startY-1][x] == Empty {
 			break
@@ -138,6 +217,18 @@ func (b *Board) CrossChecks(x, y int, j Judge) map[rune]bool {
 }
 
 type Row [15]rune
+
+func (r Row) String() string {
+	ret := ""
+	for _, t := range r {
+		if t == Empty {
+			ret = ret + " "
+		} else {
+			ret = ret + string(t)
+		}
+	}
+	return ret
+}
 
 // Anchors returns the positions of possible anchor squares in the row.
 // An anchor is a square that is vacant and has a played character to

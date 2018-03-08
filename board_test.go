@@ -66,7 +66,6 @@ func (j testJudge) Contains(s string) bool {
 }
 
 func TestCrossChecks(t *testing.T) {
-
 	allLetters := map[rune]bool{}
 	for _, r := range ALPHABET {
 		allLetters[r] = true
@@ -148,6 +147,43 @@ func TestSack(t *testing.T) {
 			}
 			So(sum, ShouldEqual, 187)
 		})
+	})
+}
+
+func TestLeftPart(t *testing.T) {
+	Convey("basic", t, func() {
+		b := &Board{}
+		guy, mac := 0, 0
+
+		Printf("guy: %d, mac: %d\n", guy, mac)
+		Printf("board:\n %s", b)
+
+		guy += b.ScoreAcross(7, 7, "ALACK")
+		b.PlaceAcross(7, 7, "ALACK")
+		Printf("guy: %d, mac: %d\n", guy, mac)
+		Printf("board:\n %s", b)
+
+		mac += b.ScoreAcross(11, 8, "AJEE")
+		b.PlaceAcross(11, 8, "AJEE")
+		sp := b.SidePoints(11, 8, 'A')
+		Printf("side points for KA: %d\n", sp)
+		Printf("guy: %d, mac: %d\n", guy, mac)
+		Printf("board:\n %s", b)
+
+		guy += b.ScoreAcross(1, 8, "OUT*REW")
+		b.PlaceAcross(1, 8, "OUT*REW")
+		sp = b.SidePoints(7, 8, 'W')
+		sa := ScrabbleScores.ScoreAt(1+1, 8)
+		Printf("score mult for U: %d\n", sa)
+		Printf("side points for AW: %d\n", sp)
+		Printf("guy: %d, mac: %d\n", guy, mac)
+		Printf("board:\n %s", b)
+
+		mac += b.ScoreDown(14, 2, "HYALINE")
+		b = b.PlaceDown(14, 2, "HYALINE")
+
+		Printf("guy: %d, mac: %d\n", guy, mac)
+		Printf("board:\n %s", b)
 	})
 }
 
