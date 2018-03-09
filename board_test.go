@@ -150,57 +150,78 @@ func TestSack(t *testing.T) {
 	})
 }
 
-func TestPlays(t *testing.T) {
+func TestPlaysAndScoring(t *testing.T) {
 	Convey("guy vs mac", t, func() {
 		b := &Board{}
 		guy, mac := 0, 0
 
-		Printf("guy: %d, mac: %d\n", guy, mac)
-		Printf("board:\n %s", b)
+		playAcross := func(score *int, x, y int, word string) {
+			*score += b.ScoreAcross(x, y, word)
+			b.PlaceAcross(x, y, word)
+			Printf("guy: %d, mac: %d\n", guy, mac)
+			Printf("board:\n %s", b)
+		}
 
-		guy += b.ScoreAcross(7, 7, "ALACK")
-		b.PlaceAcross(7, 7, "ALACK")
-		Printf("guy: %d, mac: %d\n", guy, mac)
-		Printf("board:\n %s", b)
+		playDown := func(score *int, x, y int, word string) {
+			*score += b.ScoreDown(x, y, word)
+			b = b.PlaceDown(x, y, word)
+			Printf("guy: %d, mac: %d\n", guy, mac)
+			Printf("board:\n %s", b)
+		}
+
+		playAcross(&guy, 7, 7, "ALACK")
 		So(guy, ShouldEqual, 32)
 
-		mac += b.ScoreAcross(11, 8, "AJEE")
-		b.PlaceAcross(11, 8, "AJEE")
-		sp := b.SidePoints(11, 8, 'A')
-		Printf("side points for KA: %d\n", sp)
-		Printf("guy: %d, mac: %d\n", guy, mac)
-		Printf("board:\n %s", b)
+		playAcross(&mac, 11, 8, "AJEE")
 		So(mac, ShouldEqual, 25)
 
-		guy += b.ScoreAcross(1, 8, "OUT*REW")
-		b.PlaceAcross(1, 8, "OUT*REW")
-		sp = b.SidePoints(7, 8, 'W')
-		sa := ScrabbleScores.ScoreAt(1+1, 8)
-		Printf("score mult for U: %d\n", sa)
-		Printf("side points for AW: %d\n", sp)
-		Printf("guy: %d, mac: %d\n", guy, mac)
-		Printf("board:\n %s", b)
+		playAcross(&guy, 1, 8, "OUT*REW")
 		So(guy, ShouldEqual, 98)
 
-		mac += b.ScoreDown(14, 2, "HYALINE")
-		b = b.PlaceDown(14, 2, "HYALINE")
-		Printf("guy: %d, mac: %d\n", guy, mac)
-		Printf("board:\n %s", b)
+		playDown(&mac, 14, 2, "HYALINE")
 		So(mac, ShouldEqual, 76)
 
-		guy += b.ScoreDown(12, 8, "JUNIOR")
-		b = b.PlaceDown(12, 8, "JUNIOR")
-		Printf("guy: %d, mac: %d\n", guy, mac)
-		Printf("board:\n %s", b)
+		playDown(&guy, 12, 8, "JUNIOR")
 		So(guy, ShouldEqual, 124)
 
-		mac += b.ScoreAcross(7, 14, "FENCES")
-		b.PlaceAcross(7, 14, "FENCES")
-		Printf("guy: %d, mac: %d\n", guy, mac)
-		Printf("board:\n %s", b)
-		sp = b.SidePoints(7, 8, 'W')
+		playAcross(&mac, 7, 14, "FENCES")
 		So(mac, ShouldEqual, 126)
 
+		playAcross(&guy, 11, 2, "BATH")
+		So(guy, ShouldEqual, 142)
+
+		playAcross(&mac, 11, 11, "RITZ")
+		So(mac, ShouldEqual, 172)
+
+		playDown(&guy, 14, 11, "ZEDS")
+		So(guy, ShouldEqual, 184)
+
+		playDown(&mac, 4, 4, "SLOGGI*G")
+		So(mac, ShouldEqual, 254)
+
+		playAcross(&guy, 1, 5, "YIELD")
+		So(guy, ShouldEqual, 205)
+
+		playAcross(&mac, 7, 3, "VAGUE")
+		So(mac, ShouldEqual, 288)
+
+		playAcross(&guy, 2, 13, "RUNTIER")
+		So(guy, ShouldEqual, 271)
+
+		playAcross(&mac, 8, 4, "SONDE")
+		So(mac, ShouldEqual, 315)
+
+		playAcross(&guy, 8, 2, "ME")
+		So(guy, ShouldEqual, 290)
+
+		playAcross(&mac, 8, 10, "PAVAN")
+		So(mac, ShouldEqual, 337)
+
+		playAcross(&guy, 7, 9, "EON")
+		So(guy, ShouldEqual, 309)
+
+		playDown(&mac, 2, 7, "QUITTOR")
+		So(mac, ShouldEqual, 369)
 	})
 }
 

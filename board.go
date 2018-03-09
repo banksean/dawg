@@ -95,6 +95,10 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 		// other words formed vertically since they've already
 		// been used in previous plays.
 		fmt.Printf("checking %d, %d: %s\n", x+i, y, string(b[y][x+i]))
+		if b[y][x+i] == '*' {
+			// Blanks/wildcard tiles don't contribute the score.
+			continue
+		}
 		if b[y][x+i] != Empty {
 			ret = ret + TilePoints[r]
 			fmt.Printf("%s was already played\n", string(r))
@@ -111,6 +115,12 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 				sp += TilePoints[r] * 2
 			default:
 				sp += TilePoints[r]
+			}
+			switch s {
+			case DW:
+				sp *= 2
+			case TW:
+				sp *= 3
 			}
 		}
 		sidePoints += sp
