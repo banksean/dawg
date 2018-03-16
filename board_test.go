@@ -7,6 +7,17 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestPlace(t *testing.T) {
+	Convey("top left", t, func() {
+		b := &Board{}
+		b.PlaceAcross(0, 0, "DOGEATE")
+		Printf("across:\n%s\n", b)
+		b = &Board{}
+		b = b.PlaceDown(0, 0, "DOGEATE")
+		Printf("down:\n%s\n", b)
+	})
+}
+
 func TestScoreAt(t *testing.T) {
 	Convey("spot checks", t, func() {
 		So(ScrabbleScores.ScoreAt(0, 0), ShouldEqual, TW)
@@ -233,4 +244,44 @@ func BenchmarkScrabbleScoresScoreAt(b *testing.B) {
 			}
 		}
 	}
+}
+
+func TestPlaysAndScoringFiles(t *testing.T) {
+	Convey("from file", t, func() {
+		b := &Board{}
+		guy, mac := 0, 0
+
+		playAcross := func(score *int, x, y int, word string) {
+			*score += b.ScoreAcross(x, y, word)
+			b.PlaceAcross(x, y, word)
+			Printf("guy: %d, mac: %d\n", guy, mac)
+			Printf("board:\n %s", b)
+		}
+
+		playDown := func(score *int, x, y int, word string) {
+			*score += b.ScoreDown(x, y, word)
+			b = b.PlaceDown(x, y, word)
+			Printf("guy: %d, mac: %d\n", guy, mac)
+			Printf("board:\n %s", b)
+		}
+		events := parseFile("1993_wsc_f4_wapnick_nyman.gcg.txt")
+		So(events, ShouldNotBeNil)
+
+		scores := map[string]int{}
+		for _, evt := range events {
+			score := 0
+			Printf("%#v\n", evt)
+			if evt.withdrawal {
+				scores[evt.player] += evt.score
+				continue
+			}
+			if evt.across {
+				playAcross(&score, evt.x, evt.y, evt.word)
+			} else {
+				playDown(&score, evt.x, evt.y, evt.word)
+			}
+			scores[evt.player] += score
+			So(scores[evt.player], ShouldEqual, evt.cumulativeScore)
+		}
+	})
 }
