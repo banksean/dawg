@@ -94,14 +94,14 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 		// no longer work and we won't check for side points of
 		// other words formed vertically since they've already
 		// been used in previous plays.
-		fmt.Printf("checking %d, %d: %s\n", x+i, y, string(b[y][x+i]))
+		//fmt.Printf("checking %d, %d: %s\n", x+i, y, string(b[y][x+i]))
 		if b[y][x+i] == '*' {
 			// Blanks/wildcard tiles don't contribute the score.
 			continue
 		}
 		if b[y][x+i] != Empty {
 			ret = ret + TilePoints[r]
-			fmt.Printf("%s was already played\n", string(r))
+			//fmt.Printf("%s was already played\n", string(r))
 			continue
 		}
 		newTilesPlayed += 1
@@ -146,7 +146,7 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 
 	// Bingo bonus:
 	if newTilesPlayed == 7 {
-		fmt.Printf("bingo\n")
+		//fmt.Printf("bingo\n")
 		ret += 50
 	}
 
@@ -165,7 +165,7 @@ func (b *Board) SidePoints(x, y int, r rune) int {
 		if r == Empty {
 			break
 		}
-		fmt.Printf("adding %d for %s\n", TilePoints[r], string(r))
+		//fmt.Printf("adding %d for %s\n", TilePoints[r], string(r))
 		ret += TilePoints[r]
 	}
 
@@ -174,11 +174,11 @@ func (b *Board) SidePoints(x, y int, r rune) int {
 		if r == Empty {
 			break
 		}
-		fmt.Printf("adding %d for %s\n", TilePoints[r], string(r))
+		//fmt.Printf("adding %d for %s\n", TilePoints[r], string(r))
 		ret += TilePoints[r]
 	}
 
-	fmt.Printf("sp, starting with %s: %d\n", string(r), ret)
+	//fmt.Printf("sp, starting with %s: %d\n", string(r), ret)
 	return ret
 }
 
@@ -276,30 +276,31 @@ type Play struct {
 }
 
 // More or less literal implementation of pseudocode from the 1988 ACM paper:
-func (b Board) LeftPart(x, y int, partialWord string, node *DAWG, limit int, ra Rack) {
-	b.ExtendRight(x, y, partialWord, node, ra)
+func (b Board) LeftPart(x, y int, partialWord string, node *DAWG, limit int, ra Rack, plays chan Play) {
+	b.ExtendRight(x, y, partialWord, node, ra, plays)
 	if limit > 0 {
 		for r, nextNode := range node.Edge {
 			if ra[r] > 0 {
 				ra.Remove(r)
-				b.LeftPart(x, y, partialWord+string(r), nextNode, limit-1, ra)
+				b.LeftPart(x, y, partialWord+string(r), nextNode, limit-1, ra, plays)
 				ra.Add(r)
 			}
 		}
 	}
 }
 
-func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack) {
+func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack, plays chan Play) {
 	if b[y][x] == Empty {
 		if node.Terminal {
 			// Send this on a channel?
 			LegalWord(partialWord)
+			plays <- Play{x, y, partialWord}
 		}
 		crossChecks := b.CrossChecks(x, y, rootDAWG)
 		for r, nextNode := range node.Edge {
 			if ra[r] > 0 && crossChecks[r] {
 				ra.Remove(r)
-				b.ExtendRight(x+1, y, partialWord+string(r), nextNode, ra)
+				b.ExtendRight(x+1, y, partialWord+string(r), nextNode, ra, plays)
 				ra.Add(r)
 			}
 		}
@@ -307,7 +308,7 @@ func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack) {
 		l := b[y][x]
 		if node.Edge[l] != nil {
 			nextNode := node.Edge[l]
-			b.ExtendRight(x+1, y, partialWord+string(l), nextNode, ra)
+			b.ExtendRight(x+1, y, partialWord+string(l), nextNode, ra, plays)
 		}
 	}
 }
@@ -316,14 +317,17 @@ func LegalWord(s string) {
 	fmt.Printf("legal word: %q\n", s)
 }
 
-func (b Board) GenerateRowMoves(y int, ra Rack, rootNode *DAWG) []Play {
-	ret := []Play{}
+func (b Board) GenerateRowMoves(y int, ra Rack, rootNode *DAWG) chan Play {
+	ret := make(chan Play)
 	row := b[y]
 	anchors := row.Anchors()
-	for _, x := range anchors {
-		limit := row.LeftMax(x)
-		b.LeftPart(x, y, "", rootNode, limit, ra)
-	}
+	go func() {
+		for _, x := range anchors {
+			limit := row.LeftMax(x)
+			b.LeftPart(x, y, "", rootNode, limit, ra, ret)
+		}
+		close(ret)
+	}()
 	return ret
 }
 
@@ -334,10 +338,6 @@ func (r Row) LeftMax(x int) int {
 	}
 
 	return ret
-}
-
-func (r Row) RightParts(x int, lp string, d DAWG) []string {
-	return nil
 }
 
 type Rack map[rune]int
