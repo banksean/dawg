@@ -258,6 +258,9 @@ func (r Row) String() string {
 // the right of it.
 func (r Row) Anchors() []int {
 	ret := []int{}
+	if r[0] != Empty {
+		ret = append(ret, 0)
+	}
 	for i, v := range r {
 		if v != Empty {
 			continue
@@ -277,6 +280,9 @@ type Play struct {
 
 // More or less literal implementation of pseudocode from the 1988 ACM paper:
 func (b Board) LeftPart(x, y int, partialWord string, node *DAWG, limit int, ra Rack, plays chan Play) {
+	fmt.Printf("left part %d, %d %q\n", x, y, partialWord)
+	// The left part may consist of tiles already on the board.
+
 	b.ExtendRight(x, y, partialWord, node, ra, plays)
 	if limit > 0 {
 		for r, nextNode := range node.Edge {
@@ -290,15 +296,21 @@ func (b Board) LeftPart(x, y int, partialWord string, node *DAWG, limit int, ra 
 }
 
 func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack, plays chan Play) {
+	fmt.Printf("extend right: %d, %d: %v\n", x, y, partialWord)
 	if b[y][x] == Empty {
+		fmt.Printf("%d, %d is empty\n", x, y)
 		if node.Terminal {
 			// Send this on a channel?
+			fmt.Printf("found a word: %q\n", partialWord)
 			LegalWord(partialWord)
 			plays <- Play{x, y, partialWord}
 		}
 		crossChecks := b.CrossChecks(x, y, rootDAWG)
+		fmt.Printf("cross checks: %#v\n", crossChecks)
 		for r, nextNode := range node.Edge {
+			fmt.Printf("checking next node %q\n", r)
 			if ra[r] > 0 && crossChecks[r] {
+				fmt.Printf("%q is in rack, and in cross checks\n", r)
 				ra.Remove(r)
 				b.ExtendRight(x+1, y, partialWord+string(r), nextNode, ra, plays)
 				ra.Add(r)
@@ -306,6 +318,7 @@ func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack, pl
 		}
 	} else {
 		l := b[y][x]
+		fmt.Printf("%d, %d is NOT empty: %q\n", x, y, l)
 		if node.Edge[l] != nil {
 			nextNode := node.Edge[l]
 			b.ExtendRight(x+1, y, partialWord+string(l), nextNode, ra, plays)
@@ -321,8 +334,10 @@ func (b Board) GenerateRowMoves(y int, ra Rack, rootNode *DAWG) chan Play {
 	ret := make(chan Play)
 	row := b[y]
 	anchors := row.Anchors()
+	fmt.Printf("anchors for %d:  %#v\n", row, anchors)
 	go func() {
 		for _, x := range anchors {
+			fmt.Printf("checking anchor at %d\n", x)
 			limit := row.LeftMax(x)
 			b.LeftPart(x, y, "", rootNode, limit, ra, ret)
 		}
@@ -333,7 +348,7 @@ func (b Board) GenerateRowMoves(y int, ra Rack, rootNode *DAWG) chan Play {
 
 func (r Row) LeftMax(x int) int {
 	ret := 0
-	for i := x; r[i] == Empty; i-- {
+	for i := x; i >= 0 && r[i] == Empty; i-- {
 		ret++
 	}
 

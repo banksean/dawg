@@ -308,4 +308,28 @@ func TestGenerateRowMoves(t *testing.T) {
 		}
 		So(plays, ShouldNotBeNil)
 	})
+
+	Convey("populated", t, func() {
+		b := &Board{}
+		r := Rack{'F': 1, 'O': 2, 'D': 1, 'L': 1}
+		dict := NewDAWG()
+
+		dict.Add("OF")
+		dict.Add("OOF")
+		dict.Add("FOOL")
+		dict.Add("FOOD")
+		b.PlaceAcross(0, 0, "F")
+		anchors := b[0].Anchors()
+		So(anchors, ShouldNotBeEmpty)
+		Printf("anchors: %#v\n", anchors)
+		limit := b[0].LeftMax(1)
+		Printf("limit: %d\n", limit)
+		plays := b.GenerateRowMoves(0, r, dict)
+		res := []Play{}
+		for p := range plays {
+			Printf("Play: %#v\n", p)
+			res = append(res, p)
+		}
+		So(res, ShouldNotBeEmpty)
+	})
 }
