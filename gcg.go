@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -18,7 +18,7 @@ type event struct {
 
 func parseFile(f string) []*event {
 	ret := []*event{}
-	in, err := ioutil.ReadFile(f)
+	in, err := os.ReadFile(f)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -82,14 +82,14 @@ func parseLine(s string) *event {
 		pos = pos[1:]
 		i, err = strconv.Atoi(pos)
 		if err != nil {
-			panic(fmt.Sprintf("parsing down %q (%q) err = %v, %v", parts[2], pos, err))
+			panic(fmt.Sprintf("parsing down %q (%q) err = %v", parts[2], pos, err))
 		}
 	} else {
 		c = rune(pos[len(pos)-1])
 		pos = pos[:len(pos)-1]
 		i, err = strconv.Atoi(pos)
 		if err != nil {
-			panic(fmt.Sprintf("parsing across: %q (%q) err = %v, %v", parts[2], pos, err))
+			panic(fmt.Sprintf("parsing across: %q (%q) err = %v", parts[2], pos, err))
 		}
 
 		event.across = true
