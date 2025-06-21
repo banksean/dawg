@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+
 	"log"
 	"os"
 	"runtime"
@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	byts, err := ioutil.ReadFile(*dictFile)
+	byts, err := os.ReadFile(*dictFile)
 	if err != nil {
 		log.Fatalf("trying to read dict file: %#v", err)
 	}
