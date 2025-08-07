@@ -39,11 +39,15 @@ func init() {
 }
 
 // Board is row-major, i.e. [y][x].
-type Board [15]Row
+// BREAKING CHANGE: Board is now a struct instead of array
+type Board struct {
+	Rows    [15]Row
+	Version int // Added version field for breaking compatibility
+}
 
 func (b *Board) String() string {
 	ret := ""
-	for _, row := range b {
+	for _, row := range b.Rows {
 		ret = ret + row.String() + "\n"
 	}
 	return ret
@@ -52,10 +56,10 @@ func (b *Board) String() string {
 // Transpose returns a new Board populated by the
 // transposition of b.
 func (b *Board) Transpose() *Board {
-	a := &Board{}
-	for x := range b {
-		for y := range b[x] {
-			a[x][y] = b[y][x]
+	a := &Board{Version: b.Version}
+	for x := range b.Rows {
+		for y := range b.Rows[x] {
+			a.Rows[x][y] = b.Rows[y][x]
 		}
 	}
 	return a
@@ -65,14 +69,14 @@ func (b *Board) PlaceAcross(x, y int, word string) {
 	for c, r := range word {
 		// TODO: double check here (or elsewhere)
 		// that if y, c+x is already played that it equals r.
-		if y >= len(b) {
-			panic(fmt.Sprintf("y %d is greater than board len %d", y, len(b)))
+		if y >= len(b.Rows) {
+			panic(fmt.Sprintf("y %d is greater than board len %d", y, len(b.Rows)))
 		}
-		if c+x >= len(b[y]) {
-			panic(fmt.Sprintf("x %d + c %d  is greater than board len %d", x, c, len(b[y])))
+		if c+x >= len(b.Rows[y]) {
+			panic(fmt.Sprintf("x %d + c %d  is greater than board len %d", x, c, len(b.Rows[y])))
 		}
 
-		b[y][c+x] = r
+		b.Rows[y][c+x] = r
 	}
 }
 
@@ -94,12 +98,12 @@ func (b *Board) ScoreAcross(x, y int, word string) int {
 		// no longer work and we won't check for side points of
 		// other words formed vertically since they've already
 		// been used in previous plays.
-		//fmt.Printf("checking %d, %d: %s\n", x+i, y, string(b[y][x+i]))
-		if b[y][x+i] == '*' {
+		//fmt.Printf("checking %d, %d: %s\n", x+i, y, string(b.Rows[y][x+i]))
+		if b.Rows[y][x+i] == '*' {
 			// Blanks/wildcard tiles don't contribute the score.
 			continue
 		}
-		if b[y][x+i] != Empty {
+		if b.Rows[y][x+i] != Empty {
 			ret = ret + TilePoints[r]
 			//fmt.Printf("%s was already played\n", string(r))
 			continue
@@ -161,7 +165,7 @@ func (b *Board) SidePoints(x, y int, r rune) int {
 
 	// stop when startY hits an empty space or 0
 	for ; startY > 0; startY-- {
-		r := b[startY-1][x]
+		r := b.Rows[startY-1][x]
 		if r == Empty {
 			break
 		}
@@ -169,8 +173,8 @@ func (b *Board) SidePoints(x, y int, r rune) int {
 		ret += TilePoints[r]
 	}
 
-	for ; endY < len(b)-1; endY++ {
-		r := b[endY+1][x]
+	for ; endY < len(b.Rows)-1; endY++ {
+		r := b.Rows[endY+1][x]
 		if r == Empty {
 			break
 		}
@@ -200,13 +204,13 @@ func (b *Board) CrossChecks(x, y int, j Judge) map[rune]bool {
 
 	// stop when startY hits an empty space or 0
 	for ; startY > 0; startY-- {
-		if b[startY-1][x] == Empty {
+		if b.Rows[startY-1][x] == Empty {
 			break
 		}
 	}
 
-	for ; endY < len(b)-1; endY++ {
-		if b[endY+1][x] == Empty {
+	for ; endY < len(b.Rows)-1; endY++ {
+		if b.Rows[endY+1][x] == Empty {
 			break
 		}
 	}
@@ -225,7 +229,7 @@ func (b *Board) CrossChecks(x, y int, j Judge) map[rune]bool {
 	w := []rune{}
 
 	for i := startY; i <= endY; i++ {
-		w = append(w, b[i][x])
+		w = append(w, b.Rows[i][x])
 	}
 
 	// Now for the Judgement!
@@ -297,7 +301,7 @@ func (b Board) LeftPart(x, y int, partialWord string, node *DAWG, limit int, ra 
 
 func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack, plays chan Play) {
 	fmt.Printf("extend right: %d, %d: %v\n", x, y, partialWord)
-	if b[y][x] == Empty {
+	if b.Rows[y][x] == Empty {
 		fmt.Printf("%d, %d is empty\n", x, y)
 		if node.Terminal {
 			// Send this on a channel?
@@ -317,7 +321,7 @@ func (b Board) ExtendRight(x, y int, partialWord string, node *DAWG, ra Rack, pl
 			}
 		}
 	} else {
-		l := b[y][x]
+		l := b.Rows[y][x]
 		fmt.Printf("%d, %d is NOT empty: %q\n", x, y, l)
 		if node.Edge[l] != nil {
 			nextNode := node.Edge[l]
@@ -332,7 +336,7 @@ func LegalWord(s string) {
 
 func (b Board) GenerateRowMoves(y int, ra Rack, rootNode *DAWG) chan Play {
 	ret := make(chan Play)
-	row := b[y]
+	row := b.Rows[y]
 	anchors := row.Anchors()
 	fmt.Printf("anchors for %d:  %#v\n", row, anchors)
 	go func() {
@@ -462,5 +466,5 @@ func (b boardScores) ScoreAt(x, y int) ScoreType {
 	if y > 7 {
 		y = 14 - y
 	}
-	return b[y][x]
+	return b.Rows[y][x]
 }
