@@ -42,7 +42,7 @@ func init() {
 // BREAKING CHANGE: Board is now a struct instead of array
 type Board struct {
 	Rows    [15]Row
-	Version int // Added version field for breaking compatibility
+	Version float32 // Added version field for breaking compatibility
 }
 
 func (b *Board) String() string {
