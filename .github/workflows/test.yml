@@ -1,0 +1,49 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, master, sketch-wip ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        go-version: ['1.22', '1.23', '1.24']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+    
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-${{ matrix.go-version }}-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Verify dependencies
+      run: go mod verify
+    
+    - name: Build
+      run: go build -v ./...
+    
+    - name: Run tests
+      run: |
+        # Go 1.24 has compatibility issues with GoConvey's flag handling
+        # Use our test wrapper script instead
+        chmod +x test.sh
+        ./test.sh
