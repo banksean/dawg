@@ -50,7 +50,9 @@ func main() {
 		if *recurse {
 			d.AddRecursive(strings.ToLower(line))
 		} else {
-			d.Add(strings.ToLower(line))
+			if err := d.Add(strings.ToLower(line)); err != nil {
+				log.Fatalf("failed to add word %s: %v", line, err)
+			}
 		}
 
 		if i%1000 == 0 {

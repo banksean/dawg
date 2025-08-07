@@ -9,7 +9,7 @@ type DAWG struct {
 
 // Add adds s to the graph, creating new nodes and marking
 // the terminal as necessary.
-func (d *DAWG) Add(s string) {
+func (d *DAWG) Add(s string) error {
 	for _, r := range s {
 		next, ok := d.Edge[r]
 		if !ok {
@@ -21,6 +21,7 @@ func (d *DAWG) Add(s string) {
 		d = next
 	}
 	d.Terminal = true
+	return nil
 }
 
 // AddRecursive works like Add but uses a recursive implementation.
