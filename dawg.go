@@ -9,7 +9,7 @@ type DAWG struct {
 
 // Add adds s to the graph, creating new nodes and marking
 // the terminal as necessary.
-func (d *DAWG) Add(s string) error {
+func (d *DAWG) Add(s string, requireValidation bool) error {
 	for _, r := range s {
 		next, ok := d.Edge[r]
 		if !ok {
